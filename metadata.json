@@ -1,0 +1,8 @@
+{
+  "name": "Student Mental Wellness Tracker",
+  "description": "A secure, local-first, and highly supportive student mental wellness companion. Real-time journal sentiment analysis, contextual AI chatting with Serene, 4-4-4 guided breathing portals, 5-4-3-2-1 visual grounding checklists, and proactive exam deadline countdown hub.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
