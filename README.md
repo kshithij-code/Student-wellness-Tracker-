@@ -1,6 +1,6 @@
-# Serene: Somatic Sanctuary & Reframing Workshop
+# Mindful Campus: Somatic Sanctuary & Reframing Workshop
 
-Serene is a high-fidelity, full-stack wellness portal designed specifically for students to conquer academic stress, reframe self-limiting study anxiety, and establish healthy, mindful routines. Combining instant physical anchors with structured cognitive-behavioral reframing, Serene tracks emotional health dynamically over time and surfaces smart AI insights.
+Mindful Campus is a high-fidelity, full-stack wellness portal designed specifically for students to conquer academic stress, reframe self-limiting study anxiety, and establish healthy, mindful routines. Combining instant physical anchors with structured cognitive-behavioral reframing, Mindful Campus tracks emotional health dynamically over time and surfaces smart AI insights via Serene, your conversational companion.
 
 ---
 
@@ -28,7 +28,7 @@ Serene is a high-fidelity, full-stack wellness portal designed specifically for 
 
 ## ♿ Accessibility & Usability Features
 
-Serene is meticulously engineered to be inclusive, responsive, and robust:
+Mindful Campus is meticulously engineered to be inclusive, responsive, and robust:
 * **Keyboard-Accessible Elements**: Enhanced visible focus-visible rings with optimal contrast offsets on all custom control elements and navigation nodes.
 * **Screen-Reader Assisted Markup**: Structured navigation using semantic roles, explicit `aria-current` flags, dynamic `role="menu"`, and custom `role="toolbar"`.
 * **Reduced Motion Preferences**: Seamlessly respects operating-system level rules via custom mediaqueries that override transitions and visual keyframes on request.
