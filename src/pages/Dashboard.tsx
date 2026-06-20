@@ -1,90 +1,68 @@
-import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import React from 'react';
+import { useDashboard } from '../hooks/useDashboard';
 import TrendChart from '../components/TrendChart';
 import WeeklyWellnessDigest from '../components/WeeklyWellnessDigest';
 import { 
   Flame, 
   Compass, 
   BrainCircuit, 
-  Sparkles, 
   Scale, 
   PenLine, 
   Moon, 
   AlertCircle, 
   ArrowRight,
-  TrendingUp,
   GraduationCap
 } from 'lucide-react';
+import type { JournalEntry, ExamCountdown, StudentProfile } from '../types';
 
 interface DashboardProps {
   onNavigate: (page: string) => void;
 }
 
-export default function Dashboard({ onNavigate }: DashboardProps) {
-  const { 
-    journals, 
-    countdowns, 
-    detectedTriggers, 
-    streak, 
-    averageMood, 
-    addJournalEntry, 
-    isAnalyzing,
-    profile
-  } = useApp();
+interface DashboardPresenterProps {
+  onNavigate: (page: string) => void;
+  journals: JournalEntry[];
+  countdowns: ExamCountdown[];
+  detectedTriggers: string[];
+  streak: number;
+  averageMood: number;
+  isAnalyzing: boolean;
+  profile: StudentProfile | null;
+  quickMood: number;
+  setQuickMood: (mood: number) => void;
+  quickContent: string;
+  setQuickContent: (content: string) => void;
+  journalSavedMessage: string;
+  handleQuickJournalSubmit: (e: React.FormEvent) => void;
+  dynamicGauges: Array<{ name: string; level: string; color: string; desc: string }>;
+}
 
-  const [quickMood, setQuickMood] = useState<number>(7);
-  const [quickContent, setQuickContent] = useState<string>('');
-  const [journalSavedMessage, setJournalSavedMessage] = useState<string>('');
-
-  const handleQuickJournalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!quickContent.trim()) return;
-
-    await addJournalEntry(quickMood, quickContent.trim());
-    setQuickContent('');
-    setJournalSavedMessage('Journal entry analyzed and saved successfully!');
-    setTimeout(() => setJournalSavedMessage(''), 4000);
-  };
-
-  // Dynamically populated stress and study load gauges derived from student details
-  const studentTriggers = profile?.stressTriggers && profile.stressTriggers.length > 0 
-    ? profile.stressTriggers 
-    : ['Academic workload', 'Time management strain'];
-
-  const dynamicGauges = [
-    { 
-      name: 'Daily Study Pacing', 
-      level: profile?.studyGoalHours ? `${Math.min(100, Math.round((profile.studyGoalHours / 12) * 100))}%` : '40%', 
-      color: 'bg-[#c2652a]', 
-      desc: `Pacing ${profile?.studyGoalHours || 4} hours per day focus target.` 
-    },
-    ...studentTriggers.map((t, index) => {
-      const levels = ['70%', '55%', '45%', '35%'];
-      const colors = ['bg-[#8c3c3c]', 'bg-amber-600', 'bg-orange-500', 'bg-[#c2652a]/70'];
-      const details = [
-        'Disclosed major tension catalyst during onboarding',
-        'Significant secondary focus pressure item',
-        'Disclosed situational study stress factor',
-        'Periodic pressure factor tracking'
-      ];
-      return {
-        name: t,
-        level: index < levels.length ? levels[index] : '50%',
-        color: index < colors.length ? colors[index] : 'bg-[#c2652a]',
-        desc: index < details.length ? details[index] : 'Self-identified stress triggers tracking'
-      };
-    })
-  ].slice(0, 4);
-
-
+// 1. Pure Presentational Component
+export function DashboardPresenter({
+  onNavigate,
+  journals,
+  countdowns,
+  detectedTriggers,
+  streak,
+  averageMood,
+  isAnalyzing,
+  profile,
+  quickMood,
+  setQuickMood,
+  quickContent,
+  setQuickContent,
+  journalSavedMessage,
+  handleQuickJournalSubmit,
+  dynamicGauges
+}: DashboardPresenterProps) {
   return (
     <div id="dashboard-view" className="space-y-8 animate-fade-in font-manrope">
       
       {/* Overview Status Grid Header Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 select-none">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 select-none animate-fade-in">
         
         {/* Streak Widget */}
-        <div className="bg-white border border-[#d8d0c8]/60 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
+        <div id="streak-widget" className="bg-white border border-[#d8d0c8]/60 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
           <div className="w-12 h-12 rounded-full bg-[#c2652a]/10 flex items-center justify-center text-[#c2652a]">
             <Flame className="w-6 h-6 fill-[#c2652a]/20" />
           </div>
@@ -96,7 +74,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
 
         {/* Avg Mood Widget */}
-        <div className="bg-white border border-[#d8d0c8]/60 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
+        <div id="mood-widget" className="bg-white border border-[#d8d0c8]/60 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
           <div className="w-12 h-12 rounded-full bg-[#8c3c3c]/10 flex items-center justify-center text-[#8c3c3c]">
             <Scale className="w-6 h-6" />
           </div>
@@ -108,7 +86,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
 
         {/* Exam Focus Widget */}
-        <div className="bg-white border border-[#d8d0c8]/60 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
+        <div id="exam-focus-widget" className="bg-white border border-[#d8d0c8]/60 p-6 rounded-3xl flex items-center gap-5 shadow-sm">
           <div className="w-12 h-12 rounded-full bg-[#faf5ee] border border-[#d8d0c8] flex items-center justify-center text-teal-800">
             <GraduationCap className="w-6 h-6" />
           </div>
@@ -199,7 +177,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
         </div>
       </div>
 
-      {/* Weekly Wellness Sentiment / Coping Digest (Aggregated trends summary over last 7 days) */}
+      {/* Weekly Wellness Sentiment / Coping Digest */}
       <WeeklyWellnessDigest 
         journals={journals} 
         studyGoalHours={profile?.studyGoalHours} 
@@ -236,7 +214,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
                 value={quickContent}
                 onChange={(e) => setQuickContent(e.target.value)}
                 placeholder="I felt a bit anxious during the presentation, but the feedback was helpful. I need to remember that everyone else is also learning. Maybe I can prep more visuals..."
-                className="w-full font-manrope text-sm text-[#3a302a] bg-[#faf5ee] border border-[#d8d0c8] p-4 rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#c2652a] select-text placeholder:text-[#3a302a]/30 resize-none line-clamp-6 leading-relaxed"
+                className="w-full font-manrope text-sm text-[#3a302a] bg-[#faf5ee] border border-[#d8d0c8] p-4 rounded-2xl focus:outline-none focus:ring-1 focus:ring-[#c2652a] select-text placeholder:text-[#3a302a]/30 resize-none leading-relaxed"
               />
             </div>
 
@@ -364,4 +342,10 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
 
     </div>
   );
+}
+
+// 2. State & Context Container
+export default function Dashboard({ onNavigate }: DashboardProps) {
+  const state = useDashboard();
+  return <DashboardPresenter onNavigate={onNavigate} {...state} />;
 }

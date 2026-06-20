@@ -1,53 +1,47 @@
-import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import React from 'react';
+import { useJournal } from '../hooks/useJournal';
 import { 
   Sparkles, 
   Trash2, 
-  Heart, 
   PenTool, 
   Smile, 
   Calendar, 
   BrainCircuit, 
-  Compass, 
-  Workflow, 
   Inbox,
   AlertTriangle 
 } from 'lucide-react';
 import type { JournalEntry } from '../types';
 
-export default function Journal() {
-  const { 
-    journals, 
-    addJournalEntry, 
-    deleteJournalEntry, 
-    isAnalyzing 
-  } = useApp();
+interface JournalPresenterProps {
+  journals: JournalEntry[];
+  isAnalyzing: boolean;
+  deleteJournalEntry: (id: number) => Promise<void>;
+  mood: number;
+  setMood: (mood: number) => void;
+  content: string;
+  setContent: (content: string) => void;
+  expandedId: number | null;
+  setExpandedId: (id: number | null) => void;
+  statusMessage: string;
+  handleCreateEntry: (e: React.FormEvent) => void;
+  getMoodEmoji: (score: number) => string;
+}
 
-  const [mood, setMood] = useState<number>(7);
-  const [content, setContent] = useState<string>('');
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [statusMessage, setStatusMessage] = useState<string>('');
-
-  const handleCreateEntry = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim()) return;
-
-    setStatusMessage('Syncing with GenAI analyzer...');
-    await addJournalEntry(mood, content.trim());
-    setContent('');
-    setMood(7);
-    setStatusMessage('Entry analyzed and synchronized successfully.');
-    setTimeout(() => setStatusMessage(''), 4000);
-  };
-
-  const getMoodEmoji = (score: number) => {
-    if (score <= 2) return '😞';
-    if (score <= 4) return '😐';
-    if (score <= 6) return '🙂';
-    if (score <= 8) return '😊';
-    return '😌';
-  };
-
+// 1. Pure Presenter element
+export function JournalPresenter({
+  journals,
+  isAnalyzing,
+  deleteJournalEntry,
+  mood,
+  setMood,
+  content,
+  setContent,
+  expandedId,
+  setExpandedId,
+  statusMessage,
+  handleCreateEntry,
+  getMoodEmoji
+}: JournalPresenterProps) {
   return (
     <div id="journal-view" className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in font-manrope">
       
@@ -213,7 +207,7 @@ export default function Journal() {
                           e.stopPropagation();
                           if (entry.id) deleteJournalEntry(entry.id);
                         }}
-                        className="p-1.5 rounded-full hover:bg-red-50 text-[#3a302a]/40 hover:text-red-600 transition-all"
+                        className="p-1.5 rounded-full hover:bg-red-50 text-[#3a302a]/40 hover:text-red-600 transition-all cursor-pointer"
                         title="Delete entry"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -301,4 +295,10 @@ export default function Journal() {
 
     </div>
   );
+}
+
+// 2. Container
+export default function Journal() {
+  const state = useJournal();
+  return <JournalPresenter {...state} />;
 }

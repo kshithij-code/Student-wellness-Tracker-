@@ -1,24 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import BreathingGuide from '../components/BreathingGuide';
-import { useApp } from '../context/AppContext';
-import { deconstructSelfDoubt } from '../services/gemini';
+import { useMindfulness } from '../hooks/useMindfulness';
 import type { SelfDoubtDeconstruction } from '../types';
 import { 
   Compass, 
-  HelpCircle, 
   Award, 
   RefreshCw, 
   Eye, 
-  CheckCircle,
   Clock,
   Brain,
   Sparkles,
   Info,
   Copy,
-  Plus,
   Trash2,
   Heart,
-  MessageSquare,
   Bookmark
 } from 'lucide-react';
 
@@ -45,113 +40,54 @@ const COMMON_DISTORTIONS = [
   }
 ];
 
-export default function MindfulnessZone() {
-  const { apiKey } = useApp();
-  
-  // Segmented control: 'somatic' (Breathing/Grounding) or 'reframing' (CBT Workshop)
-  const [activeTab, setActiveTab] = useState<'somatic' | 'reframing'>('somatic');
+const MINI_TIPS = [
+  { title: 'The Screen-Dim Pause', time: '2 min', action: 'Gently turn down your screen brightness to zero, close your eyes, and place warm palms over your eyelids to relax your optic nerves.' },
+  { title: 'Neck & Trapezius Release', time: '3 min', action: 'Drop your heavy shoulders. Slowly rotate your head 5 times clockwise, then counter-clockwise. Take structured deep breaths to release neck lactic stress.' },
+  { title: 'Hydration Anchor', time: '1 min', action: 'Sip a glass of cool water deliberately. Pay close attention to its refreshing temperature and feel it grounding your dry, nervous throat.' }
+];
 
-  // Grounding state
-  const [checklist, setChecklist] = useState({
-    see1: false, see2: false, see3: false, see4: false, see5: false,
-    feel1: false, feel2: false, feel3: false, feel4: false,
-    hear1: false, hear2: false, hear3: false,
-    smell1: false, smell2: false,
-    acknowledge1: false
-  });
+interface MindfulnessZonePresenterProps {
+  apiKey: string;
+  activeTab: 'somatic' | 'reframing';
+  setActiveTab: (tab: 'somatic' | 'reframing') => void;
+  checklist: Record<string, boolean>;
+  handleToggle: (key: string) => void;
+  progressPercent: number;
+  resetGrounding: () => void;
+  userDoubt: string;
+  setUserDoubt: (doubt: string) => void;
+  isAnalyzing: boolean;
+  currentReframe: SelfDoubtDeconstruction | null;
+  setCurrentReframe: (reframe: SelfDoubtDeconstruction | null) => void;
+  efficacyLedger: SelfDoubtDeconstruction[];
+  copystate: boolean;
+  handleDeconstruct: (e: React.FormEvent) => void;
+  saveToLedger: () => void;
+  deleteFromLedger: (id: string) => void;
+  copyToClipboard: (text: string) => void;
+  loadSuggestion: (doubtText: string) => void;
+}
 
-  const handleToggle = (key: keyof typeof checklist) => {
-    setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const totalItems = Object.keys(checklist).length;
-  const completedItems = Object.values(checklist).filter(Boolean).length;
-  const progressPercent = Math.round((completedItems / totalItems) * 100);
-
-  const resetGrounding = () => {
-    setChecklist({
-      see1: false, see2: false, see3: false, see4: false, see5: false,
-      feel1: false, feel2: false, feel3: false, feel4: false,
-      hear1: false, hear2: false, hear3: false,
-      smell1: false, smell2: false,
-      acknowledge1: false
-    });
-  };
-
-  // CBT Reframing workshop state
-  const [userDoubt, setUserDoubt] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentReframe, setCurrentReframe] = useState<SelfDoubtDeconstruction | null>(null);
-  const [efficacyLedger, setEfficacyLedger] = useState<SelfDoubtDeconstruction[]>([]);
-  const [copystate, setCopystate] = useState(false);
-
-  // Load ledger from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('sa_reframed_thoughts');
-    if (saved) {
-      try {
-        setEfficacyLedger(JSON.parse(saved));
-      } catch (e) {
-        console.warn('Could not read saved efficacy ledger');
-      }
-    }
-  }, []);
-
-  const handleDeconstruct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userDoubt.trim()) return;
-
-    setIsAnalyzing(true);
-    try {
-      // Direct call to helper which works either server-side or via custom user API key
-      const result = await deconstructSelfDoubt(userDoubt, apiKey);
-      setCurrentReframe(result);
-    } catch (err) {
-      console.error('Reframing error:', err);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const saveToLedger = () => {
-    if (!currentReframe) return;
-    
-    const newEntry: SelfDoubtDeconstruction = {
-      ...currentReframe,
-      id: `reframe-${Date.now()}`,
-      createdAt: Date.now()
-    };
-
-    const updated = [newEntry, ...efficacyLedger];
-    setEfficacyLedger(updated);
-    localStorage.setItem('sa_reframed_thoughts', JSON.stringify(updated));
-    setCurrentReframe(null);
-    setUserDoubt('');
-  };
-
-  const deleteFromLedger = (id: string) => {
-    const updated = efficacyLedger.filter(item => item.id !== id);
-    setEfficacyLedger(updated);
-    localStorage.setItem('sa_reframed_thoughts', JSON.stringify(updated));
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopystate(true);
-    setTimeout(() => setCopystate(false), 2000);
-  };
-
-  const loadSuggestion = (doubtText: string) => {
-    setUserDoubt(doubtText);
-    setCurrentReframe(null);
-  };
-
-  const miniTips = [
-    { title: 'The Screen-Dim Pause', time: '2 min', action: 'Gently turn down your screen brightness to zero, close your eyes, and place warm palms over your eyelids to relax your optic nerves.' },
-    { title: 'Neck & Trapezius Release', time: '3 min', action: 'Drop your heavy shoulders. Slowly rotate your head 5 times clockwise, then counter-clockwise. Take structured deep breaths to release neck lactic stress.' },
-    { title: 'Hydration Anchor', time: '1 min', action: 'Sip a glass of cool water deliberately. Pay close attention to its refreshing temperature and feel it grounding your dry, nervous throat.' }
-  ];
-
+// 1. Presenter Component
+export function MindfulnessZonePresenter({
+  activeTab,
+  setActiveTab,
+  checklist,
+  handleToggle,
+  progressPercent,
+  resetGrounding,
+  userDoubt,
+  setUserDoubt,
+  isAnalyzing,
+  currentReframe,
+  efficacyLedger,
+  copystate,
+  handleDeconstruct,
+  saveToLedger,
+  deleteFromLedger,
+  copyToClipboard,
+  loadSuggestion
+}: MindfulnessZonePresenterProps) {
   return (
     <div id="mindfulness-zone-view" className="space-y-6 animate-fade-in font-manrope">
       
@@ -170,6 +106,7 @@ export default function MindfulnessZone() {
         <div className="bg-[#faf5ee]/70 border border-[#d8d0c8]/60 p-1 rounded-2xl flex items-center shrink-0 w-fit self-start md:self-auto shadow-inner">
           <button
             type="button"
+            id="tab-toggle-somatic"
             onClick={() => setActiveTab('somatic')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'somatic' 
@@ -182,6 +119,7 @@ export default function MindfulnessZone() {
           </button>
           <button
             type="button"
+            id="tab-toggle-reframing"
             onClick={() => setActiveTab('reframing')}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'reframing' 
@@ -216,7 +154,7 @@ export default function MindfulnessZone() {
               </p>
 
               <div className="space-y-3">
-                {miniTips.map((tip, idx) => (
+                {MINI_TIPS.map((tip, idx) => (
                   <div key={idx} className="p-3.5 rounded-2xl bg-[#faf5ee]/60 border border-[#d8d0c8]/30 space-y-1">
                     <div className="flex justify-between items-center text-xs">
                       <h5 className="font-bold text-[#c2652a]">{tip.title}</h5>
@@ -284,10 +222,10 @@ export default function MindfulnessZone() {
                     </h4>
                     <div className="grid grid-cols-1 gap-1.5">
                       {['A physical book or paper sheet', 'How light beams hit the wall or floor', 'The grain of wood or fabric texture', 'An object with a curved edge', 'The tiny blinking LED of an electronic'].map((text, sIdx) => {
-                        const key = `see${sIdx + 1}` as keyof typeof checklist;
+                        const key = `see${sIdx + 1}`;
                         return (
                           <label key={sIdx} className="flex items-center gap-2.5 text-xs text-[#3a302a]/80 cursor-pointer">
-                            <input type="checkbox" checked={checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
+                            <input type="checkbox" checked={!!checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
                             {text}
                           </label>
                         );
@@ -302,10 +240,10 @@ export default function MindfulnessZone() {
                     </h4>
                     <div className="grid grid-cols-1 gap-1.5">
                       {['The solid weight of your feet on the ground', 'The support of your chair under your spine', 'The drafts or direct temperature of the room air', 'The cloth texture of your shirt sleeves'].map((text, fIdx) => {
-                        const key = `feel${fIdx + 1}` as keyof typeof checklist;
+                        const key = `feel${fIdx + 1}`;
                         return (
                           <label key={fIdx} className="flex items-center gap-2.5 text-xs text-[#3a302a]/80 cursor-pointer">
-                            <input type="checkbox" checked={checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
+                            <input type="checkbox" checked={!!checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
                             {text}
                           </label>
                         );
@@ -320,10 +258,10 @@ export default function MindfulnessZone() {
                     </h4>
                     <div className="grid grid-cols-1 gap-1.5">
                       {['The soft whir of a fan or ventilator', 'A distant hum of outdoor traffic or birds', 'The rhythmic sound of your own inhalation'].map((text, hIdx) => {
-                        const key = `hear${hIdx + 1}` as keyof typeof checklist;
+                        const key = `hear${hIdx + 1}`;
                         return (
                           <label key={hIdx} className="flex items-center gap-2.5 text-xs text-[#3a302a]/80 cursor-pointer">
-                            <input type="checkbox" checked={checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
+                            <input type="checkbox" checked={!!checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
                             {text}
                           </label>
                         );
@@ -338,10 +276,10 @@ export default function MindfulnessZone() {
                     </h4>
                     <div className="grid grid-cols-1 gap-1.5">
                       {['The scent of academic books or pencil graphite', 'The aroma of nearby coffee or study snacks'].map((text, smIdx) => {
-                        const key = `smell${smIdx + 1}` as keyof typeof checklist;
+                        const key = `smell${smIdx + 1}`;
                         return (
                           <label key={smIdx} className="flex items-center gap-2.5 text-xs text-[#3a302a]/80 cursor-pointer">
-                            <input type="checkbox" checked={checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
+                            <input type="checkbox" checked={!!checklist[key]} onChange={() => handleToggle(key)} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
                             {text}
                           </label>
                         );
@@ -355,7 +293,7 @@ export default function MindfulnessZone() {
                       5. Acknowledge 1 thing you truly appreciate:
                     </h4>
                     <label className="flex items-center gap-2.5 text-xs text-[#3a302a]/85 cursor-pointer leading-relaxed">
-                      <input type="checkbox" checked={checklist.acknowledge1} onChange={() => handleToggle('acknowledge1')} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
+                      <input type="checkbox" checked={!!checklist.acknowledge1} onChange={() => handleToggle('acknowledge1')} className="w-4 h-4 rounded border-[#d8d0c8] text-[#c2652a] focus:ring-[#c2652a] cursor-pointer" />
                       Your biological capacity and resilience. You show up, breathe, and try, which is completely enough.
                     </label>
                   </div>
@@ -505,43 +443,43 @@ export default function MindfulnessZone() {
                 <div className="space-y-4 text-xs">
                   <div>
                     <span className="block font-bold text-[#3a302a]/55 uppercase text-[9px] tracking-wider">Original Running thought:</span>
-                    <p className="italic text-[#3a302a]/75 mt-0.5 bg-[#faf5ee]/50 p-2.5 rounded-xl border border-dashed">
+                    <p className="italic text-[#3a302a]/75 mt-0.5 bg-[#faf5ee]/50 p-2.5 rounded-xl border border-dashed text-left">
                       "{currentReframe.originalThought}"
                     </p>
                   </div>
 
                   <div>
                     <span className="block font-bold text-[#3a302a]/55 uppercase text-[9px] tracking-wider">The Mind's Trick (Distortion):</span>
-                    <p className="text-[#3a302a]/80 mt-1">
+                    <p className="text-[#3a302a]/80 mt-1 text-left">
                       {currentReframe.distortionExplanation}
                     </p>
                   </div>
 
                   {/* Side by side evidence audit tables */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                    <div className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                    <div className="p-3 rounded-xl bg-orange-500/5 border border-orange-500/10 text-left">
                       <span className="block font-bold text-[#c2652a] text-[10px] uppercase">Acknowledge Reality:</span>
-                      <p className="text-[11px] text-[#3a302a]/75 mt-1 leading-relaxed">
+                      <p className="text-[11px] text-[#3a302a]/75 mt-1 leading-relaxed text-left">
                         {currentReframe.evidenceFor}
                       </p>
                     </div>
-                    <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                    <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-left">
                       <span className="block font-bold text-emerald-700 text-[10px] uppercase">Identify Alternative Evidence:</span>
-                      <p className="text-[11px] text-[#3a302a]/75 mt-1 leading-relaxed">
+                      <p className="text-[11px] text-[#3a302a]/75 mt-1 leading-relaxed text-left">
                         {currentReframe.evidenceAgainst}
                       </p>
                     </div>
                   </div>
 
                   <div className="pt-2">
-                    <div className="p-4 bg-emerald-600/5 border border-emerald-600/20 rounded-2xl relative overflow-hidden">
+                    <div className="p-4 bg-emerald-600/5 border border-emerald-600/20 rounded-2xl relative overflow-hidden text-left">
                       <div className="absolute right-0 top-0 translate-x-1 translate-y-1 rotate-12 scale-125 opacity-10">
                         <Heart className="w-12 h-12 text-emerald-600 fill-emerald-600" />
                       </div>
                       <span className="block font-bold text-emerald-800 text-[10px] uppercase tracking-wider mb-1">
                         ✨ Core Cognitive Re-wiring statement (Say this out loud):
                       </span>
-                      <p className="text-xs font-bold text-emerald-950 font-serif leading-relaxed">
+                      <p className="text-xs font-bold text-emerald-950 font-serif leading-relaxed text-left">
                         {currentReframe.reframedThought}
                       </p>
                     </div>
@@ -599,7 +537,7 @@ export default function MindfulnessZone() {
               ) : (
                 <div className="space-y-3.5 max-h-[380px] overflow-y-auto pr-1">
                   {efficacyLedger.map((item) => (
-                    <div key={item.id} className="p-4 rounded-2xl bg-[#faf5ee]/60 border border-[#d8d0c8]/40 space-y-2 relative">
+                    <div key={item.id} className="p-4 rounded-2xl bg-[#faf5ee]/60 border border-[#d8d0c8]/40 space-y-2 relative text-left">
                       <button
                         type="button"
                         onClick={() => item.id && deleteFromLedger(item.id)}
@@ -613,7 +551,7 @@ export default function MindfulnessZone() {
                         <span className="text-[9px] bg-emerald-100 border border-emerald-200 text-emerald-800 font-mono font-bold px-1.5 py-0.2 rounded">
                           {item.distortionType}
                         </span>
-                        <span className="text-[9px] text-[#3a302a]/50 font-mono">
+                        <span className="text-[9px] text-[#3a302a]/55 font-mono">
                           {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : ''}
                         </span>
                       </div>
@@ -639,4 +577,10 @@ export default function MindfulnessZone() {
 
     </div>
   );
+}
+
+// 2. Container view
+export default function MindfulnessZone() {
+  const state = useMindfulness();
+  return <MindfulnessZonePresenter {...state} />;
 }

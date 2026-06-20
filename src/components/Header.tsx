@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Search, Settings, Flame, Heart } from 'lucide-react';
+import { Settings, Flame, Heart } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface HeaderProps {
@@ -58,25 +58,6 @@ export default function Header({ title, description, onNavigateToSettings }: Hea
 
         {/* Action Widgets */}
         <div className="flex items-center gap-2" role="toolbar" aria-label="Quick Actions">
-          <button 
-            type="button"
-            className="w-10 h-10 rounded-full flex items-center justify-center border border-[#d8d0c8]/60 text-[#3a302a]/70 hover:bg-[#d8d0c8]/20 hover:text-[#3a302a] transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-[#c2652a] focus-visible:outline-offset-2"
-            title="Search insights"
-            aria-label="Search insights"
-          >
-            <Search className="w-4.5 h-4.5" aria-hidden="true" />
-          </button>
-          
-          <button 
-            type="button"
-            className="w-10 h-10 rounded-full flex items-center justify-center border border-[#d8d0c8]/60 text-[#3a302a]/70 hover:bg-[#d8d0c8]/20 hover:text-[#3a302a] transition-all relative cursor-pointer focus-visible:outline-2 focus-visible:outline-[#c2652a] focus-visible:outline-offset-2"
-            title="Notifications"
-            aria-label="Notifications"
-          >
-            <Bell className="w-4.5 h-4.5" aria-hidden="true" />
-            <span className="absolute top-2 right-2.5 w-2 h-2 bg-[#8c3c3c] rounded-full" aria-hidden="true"></span>
-          </button>
-
           {onNavigateToSettings && (
             <button 
               type="button"
