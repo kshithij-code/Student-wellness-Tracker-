@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import TrendChart from '../components/TrendChart';
+import WeeklyWellnessDigest from '../components/WeeklyWellnessDigest';
 import { 
   Flame, 
   Compass, 
@@ -197,6 +198,13 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           )}
         </div>
       </div>
+
+      {/* Weekly Wellness Sentiment / Coping Digest (Aggregated trends summary over last 7 days) */}
+      <WeeklyWellnessDigest 
+        journals={journals} 
+        studyGoalHours={profile?.studyGoalHours} 
+        onNavigateToJournal={() => onNavigate('journal')} 
+      />
 
       {/* Secondary Row: Daily Writing Block & Recommended Exercises */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

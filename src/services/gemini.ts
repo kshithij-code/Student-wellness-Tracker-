@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import type { JournalAnalysis, ChatMessage, JournalEntry } from '../types';
+import type { JournalAnalysis, ChatMessage, JournalEntry, SelfDoubtDeconstruction } from '../types';
 
 // Helper to sanitize JSON response from Gemini
 function cleanJsonString(input: string): string {
@@ -260,4 +260,113 @@ function simulateChatResponse(userText: string, latestJournal?: JournalEntry): s
 
   const idx = Math.floor(Math.random() * responses.length);
   return responses[idx];
+}
+
+/**
+ * Deconstructs a student's self-doubt thought into cognitive distortions and reframes it using AI.
+ */
+export async function deconstructSelfDoubt(
+  thought: string,
+  apiKey?: string
+): Promise<SelfDoubtDeconstruction> {
+  if (apiKey && apiKey.trim() !== '') {
+    try {
+      const ai = new GoogleGenAI({
+        apiKey: apiKey.trim(),
+        httpOptions: {
+          headers: {
+            'User-Agent': 'aistudio-build',
+          }
+        }
+      });
+
+      const prompt = `
+        You are an expert student wellness counselor specialized in CBT (Cognitive Behavioral Therapy) and high-stakes test anxiety.
+        Analyze the following self-doubt, fear, or negative thought expressed by a student preparing for difficult competitive exams (like NEET, JEE, GATE, UPSC):
+        
+        "${thought}"
+        
+        Provide a therapeutically structured deconstruction strictly in JSON format with the following keys:
+        - "distortionType": The primary cognitive distortion name (e.g. "Catastrophizing", "All-or-Nothing thinking", "Fortune Telling", "Social Comparison / Peer pressure", "Hyper-Should demands").
+        - "distortionExplanation": A gentle, short description (1-2 sentences) of how this distortion tricks the student's mind.
+        - "evidenceFor": Objectively acknowledge what makes them feel this way or what physical challenges exist in 1 brief sentence.
+        - "evidenceAgainst": Highly supportive, alternative facts or perspectives refuting the doubt, focusing on growth mindset and resilience in 2 gentle sentences.
+        - "reframedThought": A beautiful, positive, and balanced alternative statement written in the first person ("I...") that keeps their confidence and adaptive study pacing high.
+        
+        Return ONLY valid JSON. Keep responses constructive, warm, deeply empathetic, and geared toward a student mindset. Do not include any HTML markdown.
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          temperature: 0.7,
+        },
+      });
+
+      const responseText = response.text;
+      if (responseText) {
+        const cleanedJson = cleanJsonString(responseText);
+        const data = JSON.parse(cleanedJson) as {
+          distortionType: string;
+          distortionExplanation: string;
+          evidenceFor: string;
+          evidenceAgainst: string;
+          reframedThought: string;
+        };
+        return {
+          originalThought: thought,
+          distortionType: data.distortionType || 'Unconscious Filtering',
+          distortionExplanation: data.distortionExplanation || 'Anxiety is causing you to amplify stress and omit your natural capacity.',
+          evidenceFor: data.evidenceFor || 'The scope of learning is indeed comprehensive and timelines are tight.',
+          evidenceAgainst: data.evidenceAgainst || 'You have successfully learned complex modules in the past by taking step-by-step actions.',
+          reframedThought: data.reframedThought || `I am taking one structured step at a time. My value is not defined by any single day.`
+        };
+      }
+    } catch (e) {
+      console.warn('Gemini Self-Doubt API error, falling back:', e);
+    }
+  }
+
+  // Fallback simulator for self-doubt deconstruction
+  return simulateSelfDoubtDeconstruction(thought);
+}
+
+function simulateSelfDoubtDeconstruction(thought: string): SelfDoubtDeconstruction {
+  const norm = thought.toLowerCase();
+  let distortionType = 'Negative Filtering & Fortune-Telling';
+  let distortionExplanation = 'Anxiety makes you jump to the worst possible future conclusion while ignoring your capacity to adapt.';
+  let evidenceFor = 'The syllabus is indeed extensive and competitive exams test highly complex concepts under strict timing constraints.';
+  let evidenceAgainst = 'Your nervous system is interpreting fatigue as final failure. Real learning is a product of deliberate cycles, not instantaneous mastery.';
+  let reframedThought = 'I don\'t need to have perfect mastery today. I just need to focus on completing this one current sub-chapter with steady attention.';
+
+  if (norm.includes('smart') || norm.includes('better') || norm.includes('peer') || norm.includes('everyone else') || norm.includes('rank') || norm.includes('others')) {
+    distortionType = 'Social Comparison / Peer Pressure';
+    distortionExplanation = 'This distortion makes you compare your internal insecurities with everyone else\'s polished external representations.';
+    evidenceFor = 'It seems like other students are confident and answering mock sessions quickly.';
+    evidenceAgainst = 'Everyone struggles in silence or carries their own stress. Deep competence is highly individualized, and you have distinct analytical talents.';
+    reframedThought = 'My academic track is uniquely my own. I will measure my progress against my past self, not other people\'s highlights.';
+  } else if (norm.includes('fail') || norm.includes('ruin') || norm.includes('never') || norm.includes('over') || norm.includes('scared') || norm.includes('fear')) {
+    distortionType = 'Catastrophizing & Black-and-White Thinking';
+    distortionExplanation = 'This filter tricks you into believing that any outcome short of flawless perfection represents total academic catastrophe.';
+    evidenceFor = 'The stakes are high, and failing to secure a top rank is a realistic, scary prospect.';
+    evidenceAgainst = 'An exam is a test of a specific syllabus on a specific day, not a judgment of your human value, future income, or raw intellect. Countless paths to glorious success exist.';
+    reframedThought = 'A single mock score or tough preparation week is just diagnostic feedback. I am capable of growing, adapting, and finding my own solid path.';
+  } else if (norm.includes('late') || norm.includes('not enough time') || norm.includes('behind') || norm.includes('hours') || norm.includes('schedule') || norm.includes('prep')) {
+    distortionType = '"Should" Statements & Time Magnification';
+    distortionExplanation = 'Your mind sets unrealistic, rigid hyper-demands about what your study pace "should" look like, causing instant paralysis.';
+    evidenceFor = 'The countdown date is approaching rapidly and there are modules left unreviewed.';
+    evidenceAgainst = 'Trying to cram everything at once creates brain static. Quality study periods of 3 hours are far superior to 10 hours of panic-revision.';
+    reframedThought = 'I will work with the hours I have today. I will focus strictly on high-yield sections and give myself credit for each tiny block completed.';
+  }
+
+  return {
+    originalThought: thought,
+    distortionType,
+    distortionExplanation,
+    evidenceFor,
+    evidenceAgainst,
+    reframedThought,
+  };
 }

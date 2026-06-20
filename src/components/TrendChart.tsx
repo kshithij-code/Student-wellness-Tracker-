@@ -11,6 +11,7 @@ import {
 } from 'recharts';
 import type { JournalEntry } from '../types';
 import { BookOpen } from 'lucide-react';
+import ChartLegend from './ChartLegend';
 
 interface TrendChartProps {
   journals: JournalEntry[];
@@ -70,16 +71,13 @@ export default function TrendChart({ journals, onNavigateToJournal }: TrendChart
           </p>
         </div>
         {/* Legend */}
-        <div className="flex items-center gap-4 text-xs font-manrope">
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#c2652a]"></span>
-            <span className="text-[#3a302a]/80 font-medium">Mood (1-10)</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-[#8c3c3c]"></span>
-            <span className="text-[#3a302a]/80 font-medium">Est. Stress</span>
-          </div>
-        </div>
+        <ChartLegend 
+          ariaLabel="Trends legend representation" 
+          items={[
+            { label: 'Mood', color: '#c2652a', value: '1-10' },
+            { label: 'Est. Stress', color: '#8c3c3c', dashed: true }
+          ]} 
+        />
       </div>
 
       <div className="h-64 w-full">

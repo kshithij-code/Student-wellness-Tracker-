@@ -102,11 +102,9 @@ export default function ChatCompanion() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`Do you want to clear/delete this session?`)) {
-                          deleteThread(t.id);
-                        }
+                        deleteThread(t.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+                      className="opacity-100 sm:opacity-0 group-hover:opacity-100 p-0.5 rounded text-red-600 hover:bg-red-50 transition-all cursor-pointer"
                       title={t.id === 'default' ? 'Clear session' : 'Delete session'}
                     >
                       <Trash2 className="w-3 h-3" />

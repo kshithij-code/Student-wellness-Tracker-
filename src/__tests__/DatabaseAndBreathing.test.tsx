@@ -7,6 +7,22 @@ import '@testing-library/jest-dom';
 import { db } from '../db';
 import BreathingGuide from '../components/BreathingGuide';
 
+// Mock context hook
+vi.mock('../context/AppContext', () => {
+  return {
+    useApp: () => ({
+      apiKey: '',
+      journals: [],
+      profile: {
+        name: 'Jane Student',
+        examType: 'Midterm exams',
+        studyGoalHours: 5
+      },
+      countdowns: []
+    })
+  };
+});
+
 // 1. Mock Dexie indexedDB calls so they run flawlessly in our sandboxed test runner
 vi.mock('../db', () => {
   let journalsStore: any[] = [];

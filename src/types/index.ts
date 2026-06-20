@@ -56,3 +56,15 @@ export interface StudentProfile {
   studyGoalHours: number;
 }
 
+export interface SelfDoubtDeconstruction {
+  id?: string;
+  originalThought: string;
+  distortionType: string;
+  distortionExplanation: string;
+  evidenceFor: string;
+  evidenceAgainst: string;
+  reframedThought: string;
+  createdAt?: number;
+}
+
+

@@ -52,27 +52,32 @@ export default function Sidebar({ currentPage, setCurrentPage }: SidebarProps) {
         </div>
 
         {/* Navigation Routes */}
-        <nav className="flex flex-col gap-6">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentPage === item.id;
-            return (
-              <button
-                key={item.id}
-                id={`nav-${item.id}`}
-                onClick={() => setCurrentPage(item.id)}
-                className={`flex items-center space-x-3 text-sm font-medium transition-all duration-200 cursor-pointer text-left ${
-                  isActive
-                    ? 'text-[#c2652a]'
-                    : 'text-[#3a302a]/60 hover:text-[#c2652a]'
-                }`}
-              >
-                <div className={`w-1 h-4 rounded-full transition-all duration-200 ${isActive ? 'bg-[#c2652a]' : 'bg-transparent'}`} />
-                <Icon className="w-4.5 h-4.5 shrink-0" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        <nav className="flex flex-col gap-6" aria-label="Primary Portal Navigation">
+          <ul className="flex flex-col gap-2" role="menu">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = currentPage === item.id;
+              return (
+                <li key={item.id} role="none">
+                  <button
+                    id={`nav-${item.id}`}
+                    role="menuitem"
+                    onClick={() => setCurrentPage(item.id)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`w-full flex items-center space-x-3 text-sm font-medium transition-all duration-200 cursor-pointer text-left rounded-lg p-2 focus-visible:outline-2 focus-visible:outline-[#c2652a] focus-visible:outline-offset-2 ${
+                      isActive
+                        ? 'text-[#c2652a] font-semibold bg-[#c2652a]/5'
+                        : 'text-[#3a302a]/60 hover:text-[#c2652a] hover:bg-[#d8d0c8]/10'
+                    }`}
+                  >
+                    <div className={`w-1 h-4 rounded-full transition-all duration-200 ${isActive ? 'bg-[#c2652a]' : 'bg-transparent'}`} aria-hidden="true" />
+                    <Icon className="w-4.5 h-4.5 shrink-0" aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </nav>
       </div>
 

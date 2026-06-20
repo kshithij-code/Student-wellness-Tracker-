@@ -40,10 +40,11 @@ export default function Settings() {
   };
 
   const emergencyHelplines = [
-    { country: 'United States & Canada', name: 'Suicide & Crisis Lifeline', number: 'Call or Text 988', timing: '24/7 Available' },
-    { country: 'United Kingdom', name: 'Student Minds / Samaritans', number: 'Call 116 123', timing: '24/7 Support' },
-    { country: 'India', name: 'Kiran Mental Health Helpline', number: 'Call 1800-599-0019', timing: 'Govt, 24/7 free' },
-    { country: 'Australia', name: 'Lifeline Australia', number: 'Call 13 11 14', timing: '24/7 Support' }
+    { country: 'National (India) - Tele MANAS', name: 'Ministry of Health & Family Welfare Helpline', number: '14416 or 1800-891-4416', timing: 'Govt, 24/7 free' },
+    { country: 'National (India) - Kiran Support', name: 'Ministry of Social Justice & Empowerment Helpline', number: '1800-599-0019', timing: 'Govt, 24/7 free' },
+    { country: 'Student & Academic Crisis Care', name: 'Vandrevala Foundation Counseling', number: '9999-666-555', timing: '24/7 Support' },
+    { country: 'Somatic & Crisis Assistance', name: 'AASRA Suicide & Stress Prevention', number: '+91 9820466726', timing: '24/7 Helpline' },
+    { country: 'Empathetic Student Listening', name: 'Sneha India Support Services', number: '+91 44 24640050', timing: '24/7 Help' }
   ];
 
   return (
@@ -57,19 +58,19 @@ export default function Settings() {
           <div className="flex items-center gap-2 mb-2">
             <Key className="w-5 h-5 text-[#c2652a]" />
             <h3 className="font-serif text-lg font-bold text-[#3a302a]">
-              Gemini API Sandbox Config
+              Gemini API Key Configuration
             </h3>
           </div>
           <p className="text-xs text-[#3a302a]/65 mb-5 leading-relaxed">
-            By default, the wellness analyzer relies on a high-fidelity mock engine local to your browser. Connect your standard Gemini API key to activate genuine, advanced natural language sentiment extraction and contextual chat companion reasoning.
+            Serene comes pre-configured with a default shared Gemini API Key so you can experience real-time AI-powered mental wellness analysis and natural conversation immediately. If you have your own personal Google AI Studio Gemni API Key, feel free to insert it below. Your custom key takes higher priority and stays strictly in your browser storage.
           </p>
 
           <form onSubmit={handleSaveKey} className="space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="apiKey" className="block text-xs font-bold text-[#3a302a]/75 flex items-center justify-between">
-                <span>Gemini API Key (stored entirely locally)</span>
+                <span>Custom Gemini API Key (stored locally)</span>
                 <span className="text-[10px] text-emerald-600 font-mono flex items-center gap-1 font-bold">
-                  <Lock className="w-3 h-3" /> local-only
+                  {apiKey ? "🟢 Using Personal Key" : "🔵 Using Serene Shared Default Key"}
                 </span>
               </label>
               
